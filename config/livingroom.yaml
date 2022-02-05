@@ -1,8 +1,12 @@
 # TTGO T-Camera Plus
-# D. Richards, 2022 Feb 2
-# Backlight
+# D. Richards, 2022 Feb 5
+# Backlight on/off
 # Display
 # Camera
+# Camera snapshot web
+# BME688
+# MQTT
+# ntp time
 
 esphome:
   name: livingroom
@@ -99,8 +103,15 @@ esp32_camera:
   
   resolution: 640x480
   jpeg_quality: 10
-  aec2: true
-  
+#  aec2: true
+
+# Example configuration entry
+esp32_camera_web_server:
+#  - port: 8080
+#    mode: stream
+  - port: 8081
+    mode: snapshot
+    
 font:
   - file: "helvetica.ttf"
     id: helvetica_48
@@ -135,17 +146,27 @@ color:
     green: 100%
     blue: 0%
 
+time:
+  - platform: sntp
+    id: esptime
+    servers:
+      - 0.uk.pool.ntp.org
+      - 1.uk.pool.ntp.org
+      - 2.uk.pool.ntp.org
+      
 display:
   - platform: st7789v
     backlight_pin: GPIO2
     cs_pin: GPIO12
     dc_pin: GPIO15
     reset_pin: 22 #dummy entry
+
     lambda: |-
-      it.printf(0,  0, id(helvetica_24), my_red,    "%5.1f C",id(temperature).state);
-      it.printf(0, 25, id(helvetica_24), my_blue,   "%5.1f %%",id(humidity).state);
-      it.printf(0, 50, id(helvetica_24), my_yellow, "%5.0f CO2",id(co2).state);
-      it.printf(0, 75, id(helvetica_24), my_green,  "%5.1f VOC",id(voc).state);
-      it.printf(0,100, id(helvetica_24),            "%5.1f IAQ",id(iaq).state);
-      it.printf(0,125, id(helvetica_24),            "%s",id(accuracy).state.c_str());
+      it.strftime(0,   0, id(helvetica_24),            " %H:%M:%S ", id(esptime).now());      
+      it.printf  (0,  25, id(helvetica_24), my_red,    "%5.1f C",id(temperature).state);
+      it.printf  (0,  50, id(helvetica_24), my_blue,   "%5.1f %%",id(humidity).state);
+      it.printf  (0,  75, id(helvetica_24), my_yellow, "%5.0f CO2",id(co2).state);
+      it.printf  (0, 100, id(helvetica_24), my_green,  "%5.1f VOC",id(voc).state);
+      it.printf  (0, 125, id(helvetica_24),            "%5.1f IAQ",id(iaq).state);
+      it.printf  (0, 150, id(helvetica_24),            " %s",id(accuracy).state.c_str());
 
